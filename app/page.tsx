@@ -1,101 +1,340 @@
-import Image from "next/image";
+"use client";
+import React, { useState, useEffect } from "react";
+import {
+  Button,
+  Box,
+  Typography,
+  Grid,
+  Container,
+  Paper,
+  createTheme,
+  ThemeProvider,
+} from "@mui/material";
+import { styled } from "@mui/system";
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+const IWAO_BLUE = "#336699";
+const GAME_TITLE =
+  "イワオブルーを探せ！";
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+// カスタムテーマを作成してプライマリカラーを#336699に設定
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: IWAO_BLUE,
+    },
+  },
+});
+
+// カスタムボタンコンポーネントを作成
+const ColorButton = ({
+  color,
+  onClick,
+  isCorrect = false,
+  showCorrect = false,
+}) => (
+  <Button
+    onClick={() => onClick(color)}
+    variant="contained"
+    sx={{
+      backgroundColor: color,
+      width: "50px",
+      height: "50px",
+      minWidth: "50px",
+      margin: "5px",
+      border:
+        showCorrect && isCorrect ? "3px solid #FF0000" : `1px solid ${IWAO_BLUE}`,
+      borderRadius: "8px",
+      boxShadow: "0 2px 5px rgba(0, 0, 0, 0.3)",
+      "&:hover": {
+        backgroundColor: color,
+      },
+    }}
+    aria-label={`色: ${color}`}
+  />
+);
+
+// 吹き出しコンポーネントをスタイリング
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  position: "relative",
+  borderRadius: ".4em",
+  padding: "10px",
+  margin: "20px",
+  maxWidth: "300px",
+  border: `1px solid ${IWAO_BLUE}`,
+}));
+
+const Bubble = ({ children }) => (
+  <StyledPaper elevation={3}>
+    {children}
+    <Box
+      sx={{
+        content: '""',
+        position: "absolute",
+        top: "50%",
+        left: 0,
+        transform: "translate(-100%, -50%)",
+        width: 0,
+        height: 0,
+        border: "10px solid transparent",
+        borderRightColor: "#ffffff",
+      }}
+    />
+    <Box
+      sx={{
+        content: '""',
+        position: "absolute",
+        top: "50%",
+        left: 0,
+        transform: "translate(-100%, -50%)",
+        width: 0,
+        height: 0,
+        border: "11px solid transparent",
+        borderRightColor: IWAO_BLUE,
+        zIndex: -1,
+        marginLeft: "-2px",
+      }}
+    />
+  </StyledPaper>
+);
+
+const generateRandomBlue = (level) => {
+  const baseR = 51,
+    baseG = 102,
+    baseB = 153; // IWAO_BLUE components
+  const maxDiff = Math.max(70 - level * 10, 10); // Decrease max difference as level increases
+
+  const r = Math.max(
+    0,
+    Math.min(255, baseR + (Math.random() * 2 - 1) * maxDiff)
   );
-}
+  const g = Math.max(
+    0,
+    Math.min(255, baseG + (Math.random() * 2 - 1) * maxDiff)
+  );
+  const b = Math.max(
+    0,
+    Math.min(255, baseB + (Math.random() * 2 - 1) * maxDiff)
+  );
+
+  return `#${Math.round(r)
+    .toString(16)
+    .padStart(2, "0")}${Math.round(g)
+      .toString(16)
+      .padStart(2, "0")}${Math.round(b).toString(16).padStart(2, "0")}`;
+};
+
+const generateColors = (count, level) => {
+  const colors = [IWAO_BLUE];
+  while (colors.length < count) {
+    const newColor = generateRandomBlue(level);
+    if (!colors.includes(newColor)) {
+      colors.push(newColor);
+    }
+  }
+  return colors.sort(() => Math.random() - 0.5);
+};
+
+const Game = () => {
+  const [gameState, setGameState] = useState("start");
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [colors, setColors] = useState([]);
+  const [showCorrect, setShowCorrect] = useState(false);
+
+  useEffect(() => {
+    if (gameState === "playing") {
+      setColors(generateColors(currentLevel + 1, currentLevel));
+      setShowCorrect(false);
+    }
+  }, [gameState, currentLevel]);
+
+  const handleColorClick = (color) => {
+    if (color === IWAO_BLUE) {
+      if (currentLevel >= 6) {
+        setGameState("won");
+      } else {
+        setCurrentLevel((prevLevel) => prevLevel + 1);
+      }
+    } else {
+      setShowCorrect(true);
+      setGameState("lost");
+    }
+  };
+
+  const resetGame = () => {
+    setGameState("start");
+    setCurrentLevel(1);
+    setColors([]);
+    setShowCorrect(false);
+  };
+
+  const renderStartScreen = () => (
+    <Box textAlign="center">
+      <Typography variant="h4" gutterBottom>
+        {GAME_TITLE}
+      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "row",
+        }}
+      >
+        <Box sx={{ marginRight: "20px" }}>
+          <img
+            src="/iwao1.jpg"
+            alt="キャラクター"
+            style={{ borderRadius: "50%" }}
+            height="200px"
+            width="200px"
+          />
+        </Box>
+        <Bubble>
+          <Typography variant="body1">
+            青って200色あんねん。下はイワオブルー（#336699）だよ。みわけられるよね。
+          </Typography>
+        </Bubble>
+      </Box>
+      <Box
+        sx={{
+          width: "100px",
+          height: "100px",
+          backgroundColor: IWAO_BLUE,
+          margin: "20px auto",
+        }}
+      />
+      <Button variant="contained" onClick={() => setGameState("playing")}>
+        ゲームスタート
+      </Button>
+    </Box>
+  );
+
+  const renderPlayingScreen = () => (
+    <Box textAlign="center">
+      <Typography variant="h5" gutterBottom>
+        レベル {currentLevel}
+      </Typography>
+      <Typography variant="body1" gutterBottom>
+        イワオブルーはどれ？
+      </Typography>
+      <Grid container justifyContent="center">
+        {colors.map((color, index) => (
+          <ColorButton
+            key={index}
+            color={color}
+            onClick={handleColorClick}
+            isCorrect={color === IWAO_BLUE}
+            showCorrect={showCorrect}
+          />
+        ))}
+      </Grid>
+    </Box>
+  );
+
+  const renderWonScreen = () => (
+    <Box textAlign="center">
+      <Typography variant="h4" gutterBottom>
+        おめでとうございます！
+      </Typography>
+      <Typography variant="body1" gutterBottom>
+        あなたはイワオブルーマスターです！
+      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "row",
+        }}
+      >
+        <Box sx={{ marginRight: "20px" }}>
+          <img
+            src="/iwao-heart.jpg"
+            alt="キャラクター"
+            style={{ borderRadius: "50%" }}
+            height="200px"
+            width="200px"
+          />
+        </Box>
+        <Bubble>
+          <Typography variant="body1">
+            なかなかですね。君にはハートを送ります。code for yokohamaの定例会においでよ。
+          </Typography>
+        </Bubble>
+      </Box>
+      <Button variant="contained" onClick={resetGame}>
+        もう一度プレイ
+      </Button>
+    </Box>
+  );
+
+  const renderLostScreen = () => (
+    <Box textAlign="center">
+      <Typography variant="h4" gutterBottom>
+        残念！
+      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "row",
+        }}
+      >
+        <Box sx={{ marginRight: "20px" }}>
+          <img
+            src="/iwao-kayui.png"
+            alt="キャラクター"
+            style={{ borderRadius: "50%" }}
+            height="200px"
+            width="200px"
+          />
+        </Box>
+        <Bubble>
+          <Typography variant="body1">
+            惜しいけどちがうなー。正解のイワオブルー（#336699）は赤枠で囲まれた色だよ。もう一度やる？
+          </Typography>
+        </Bubble>
+      </Box>
+      <Grid container justifyContent="center">
+        {colors.map((color, index) => (
+          <ColorButton
+            key={index}
+            color={color}
+            onClick={() => { }}
+            isCorrect={color === IWAO_BLUE}
+            showCorrect={true}
+          />
+        ))}
+      </Grid>
+      <Button variant="contained" onClick={resetGame} sx={{ marginTop: "20px" }}>
+        もう一度プレイ
+      </Button>
+    </Box>
+  );
+
+  const renderGame = () => {
+    switch (gameState) {
+      case "start":
+        return renderStartScreen();
+      case "playing":
+        return renderPlayingScreen();
+      case "won":
+        return renderWonScreen();
+      case "lost":
+        return renderLostScreen();
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <ThemeProvider theme={theme}>
+      <Container maxWidth="sm" sx={{ padding: "20px" }}>
+        {renderGame()}
+      </Container>
+    </ThemeProvider>
+  );
+};
+
+export default Game;
