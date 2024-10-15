@@ -54,7 +54,7 @@ const ColorButton = ({
 );
 
 // 吹き出しコンポーネントをスタイリング
-const StyledPaper = styled(Paper)(({ theme }) => ({
+const StyledPaper = styled(Paper)(() => ({
   position: "relative",
   borderRadius: ".4em",
   padding: "10px",
